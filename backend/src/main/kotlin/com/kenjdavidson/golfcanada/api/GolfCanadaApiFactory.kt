@@ -1,4 +1,4 @@
-package com.kenjdavidson.golfcanada.golfcanada
+package com.kenjdavidson.golfcanada.api
 
 import com.kenjdavidson.golfcanada.golfcanada.api.AuthenticationApi
 import com.kenjdavidson.golfcanada.golfcanada.api.MembersApi
