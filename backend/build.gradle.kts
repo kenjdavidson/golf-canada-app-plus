@@ -49,6 +49,9 @@ micronaut {
 
 val copyFrontend = tasks.register<Copy>("copyFrontend") {
     description = "Copies the built frontend dist into backend static resources for production packaging."
+    onlyIf("frontend/dist must exist — run 'npm run build' in the frontend module first") {
+        file("../frontend/dist").exists()
+    }
     from("../frontend/dist")
     into("src/main/resources/public")
 }
