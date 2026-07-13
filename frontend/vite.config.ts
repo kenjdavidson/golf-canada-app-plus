@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Golf Canada App Plus',
-        short_name: 'GolfCA+',
+        name: 'Golf Canada App+',
+        short_name: 'GolfCanada+',
         description: 'Golf Canada App mini-app with enhanced game modes and data tracking',
         theme_color: '#1a6b3c',
         background_color: '#ffffff',
