@@ -1,0 +1,876 @@
+openapi: 3.0.3
+info:
+  title: Golf Canada API Client
+  description: Minimal Golf Canada API operations required by the Handicap Committee app.
+  version: 1.0.0
+servers:
+  - url: https://scg.golfcanada.ca
+paths:
+  /connect/token:
+    post:
+      summary: Retrieve authentication token
+      tags: [Authentication]
+      operationId: authenticate
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '400':
+          description: Invalid request
+        '401':
+          description: Not authorized
+
+  /api/scores/getProfile:
+    get:
+      summary: Retrieve member profile information
+      tags: [Members]
+      operationId: getProfile
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: individualId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Member profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          description: Not authorized
+        '404':
+          description: Member not found
+
+  /api/members/search:
+    get:
+      summary: Search for members by name
+      tags: [Members]
+      operationId: searchMembers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: $skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: $top
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: text
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Member search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberSearchResponse'
+        '401':
+          description: Not authorized
+
+  /api/scores/getScoreDetails:
+    get:
+      summary: Retrieve score details for a specific score
+      tags: [Scores]
+      operationId: getScoreDetails
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: scoreId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Score details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreDetails'
+        '401':
+          description: Not authorized
+        '404':
+          description: Score not found
+
+  /api/scores/getHistory:
+    get:
+      summary: Retrieve member handicap history
+      tags: [Members]
+      operationId: getHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: $skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: $top
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: individualId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Member handicap history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+        '401':
+          description: Not authorized
+        '404':
+          description: Member not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AuthRequest:
+      type: object
+      required:
+        - grant_type
+        - username
+        - password
+      properties:
+        grant_type:
+          type: string
+          default: password
+        username:
+          type: string
+        password:
+          type: string
+        rememberme:
+          type: boolean
+        scope:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+    AuthToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+          format: int32
+        refresh_token:
+          type: string
+        id_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        expire_date:
+          type: string
+          format: date-time
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        authUserId:
+          type: integer
+          format: int64
+        networkId:
+          type: integer
+          format: int64
+        golfCanadaCardId:
+          type: string
+        username:
+          type: string
+        fullName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        handicap:
+          type: string
+        pcc:
+          type: string
+        email:
+          type: string
+        isAdmin:
+          type: boolean
+        isNationalAdmin:
+          type: boolean
+        isNationalLookupAdmin:
+          type: boolean
+        isAssociationAdmin:
+          type: boolean
+        isSystemAdmin:
+          type: boolean
+        isTournamentAdmin:
+          type: boolean
+        isHandicapChair:
+          type: boolean
+        isLimitedClubAdmin:
+          type: boolean
+        isPending:
+          type: boolean
+        membershipLevel:
+          type: string
+        expirationDate:
+          type: string
+          format: date-time
+        clubManagementGroupId:
+          type: integer
+        termsAndConditionsDate:
+          type: string
+          format: date-time
+        isClubManagingUpgrades:
+          type: boolean
+        allowScorePosting:
+          type: boolean
+        subscriptionRenewsOn:
+          type: string
+          format: date-time
+          nullable: true
+        scoreDefaults:
+          $ref: '#/components/schemas/ScoreDefaults'
+    ScoreDefaults:
+      type: object
+      properties:
+        nationalAssociation:
+          type: string
+        facilityId:
+          type: integer
+        facilityName:
+          type: string
+        courseId:
+          type: integer
+        teeId:
+          type: integer
+        postHoleByHole:
+          type: boolean
+    MemberSearchEntry:
+      type: object
+      description: A single member result from the Golf Canada member search.
+      properties:
+        individualId:
+          type: integer
+          format: int64
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        club:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        handicap:
+          type: string
+          nullable: true
+    MemberSearchResponse:
+      type: object
+      description: Response payload from the Golf Canada member search endpoint.
+      properties:
+        totalCount:
+          type: integer
+          nullable: true
+        members:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/MemberSearchEntry'
+    Profile:
+      type: object
+      description: Member snapshot payload as returned by Golf Canada.
+      properties:
+        individualId:
+          type: integer
+          format: int64
+          nullable: true
+        cardId:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        handicap:
+          type: string
+          nullable: true
+        club:
+          $ref: '#/components/schemas/ProfileClub'
+          nullable: true
+        level:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        total:
+          type: integer
+          nullable: true
+        isFriend:
+          type: boolean
+          nullable: true
+        showComplete:
+          type: boolean
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        membershipType:
+          type: string
+          nullable: true
+        expirationDate:
+          type: string
+          format: date-time
+          nullable: true
+        homeCourse:
+          type: string
+          nullable: true
+        defaultTee:
+          type: string
+          nullable: true
+        courseHandicap:
+          type: string
+          nullable: true
+        winterHandicap:
+          type: string
+          nullable: true
+        winterCourseHandicap:
+          type: string
+          nullable: true
+        isWinterHandicapDisplayed:
+          type: boolean
+          nullable: true
+        scores:
+          type: array
+          nullable: true
+          items:
+            type: object
+            additionalProperties: true
+        clubManagementGroup:
+          type: string
+          nullable: true
+        ytdScoreCount:
+          type: integer
+          nullable: true
+        ytdScoreAverage:
+          type: number
+          format: double
+          nullable: true
+        ytdYear:
+          type: integer
+          nullable: true
+        transferClubName:
+          type: string
+          nullable: true
+        transferRequestDate:
+          type: string
+          format: date-time
+          nullable: true
+        lastCardRequestedOn:
+          type: string
+          format: date-time
+          nullable: true
+        expectedDeliveryOn:
+          type: string
+          format: date-time
+          nullable: true
+        isCardsSentToClub:
+          type: boolean
+          nullable: true
+        lowHandicap:
+          type: string
+          nullable: true
+        lowHandicapOn:
+          type: string
+          format: date-time
+          nullable: true
+        adjustedLowHandicap:
+          type: string
+          nullable: true
+        displayLowHandicap:
+          type: string
+          nullable: true
+        adjustedLowHandicapStartOn:
+          type: string
+          format: date-time
+          nullable: true
+        adjustedLowHandicapEndOn:
+          type: string
+          format: date-time
+          nullable: true
+        lowHandicapAdjustedOn:
+          type: string
+          format: date-time
+          nullable: true
+        isLowIndexAdjusted:
+          type: boolean
+          nullable: true
+        subscriptionRenewsOn:
+          type: string
+          format: date-time
+          nullable: true
+    ProfileClub:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        line1:
+          type: string
+          nullable: true
+        line2:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        url:
+          type: string
+          nullable: true
+        "logo@odata.mediaReadLink":
+          type: string
+          nullable: true
+    HistoryEntry:
+      type: object
+      description: Handicap history entry payload as returned by Golf Canada.
+      properties:
+        id:
+          type: integer
+          format: int64
+          nullable: true
+        date:
+          type: string
+          format: date-time
+          nullable: true
+        course:
+          type: string
+          nullable: true
+        tee:
+          type: string
+          nullable: true
+        holes:
+          type: string
+          nullable: true
+        score:
+          type: integer
+          nullable: true
+        rating:
+          type: number
+          format: double
+          nullable: true
+        slope:
+          type: integer
+          nullable: true
+        handicap:
+          type: number
+          format: double
+          nullable: true
+        differential:
+          type: number
+          format: double
+          nullable: true
+        scaleTypeId:
+          type: string
+          nullable: true
+        adjustedDifferential:
+          type: number
+          format: double
+          nullable: true
+        playedDifferential:
+          type: number
+          format: double
+          nullable: true
+        expectedDifferential:
+          type: number
+          format: double
+          nullable: true
+        estimatedRating:
+          type: number
+          format: double
+          nullable: true
+        estimatedSlope:
+          type: integer
+          nullable: true
+        scaledHolesPlayed:
+          type: integer
+          nullable: true
+        adjustment:
+          type: number
+          format: double
+          nullable: true
+        pccAdjustment:
+          type: number
+          format: double
+          nullable: true
+        isPCC:
+          type: boolean
+          nullable: true
+        type:
+          type: string
+          nullable: true
+        isHandicapScore:
+          type: boolean
+          nullable: true
+        isUsedInCalc:
+          type: boolean
+          nullable: true
+        isEdited:
+          type: boolean
+          nullable: true
+        canEdit:
+          type: boolean
+          nullable: true
+        canDelete:
+          type: boolean
+          nullable: true
+        adjustments:
+          type: array
+          nullable: true
+          items:
+            type: object
+            additionalProperties: true
+        lowHandicap:
+          type: number
+          format: double
+          nullable: true
+    HistoryResponse:
+      type: object
+      properties:
+        individualId:
+          type: integer
+          format: int64
+          nullable: true
+        total:
+          type: integer
+          nullable: true
+        showComplete:
+          type: boolean
+          nullable: true
+        data:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/HistoryEntry'
+    HoleScore:
+      type: object
+      description: Score details for a single hole.
+      properties:
+        holeNumber:
+          type: number
+          format: double
+          nullable: true
+        gross:
+          type: integer
+          nullable: true
+        par:
+          type: integer
+          nullable: true
+        label:
+          type: string
+          nullable: true
+        putts:
+          type: integer
+          nullable: true
+        puttLength:
+          type: number
+          format: double
+          nullable: true
+        golfClub:
+          type: string
+          nullable: true
+        drive:
+          type: string
+          nullable: true
+        fir:
+          type: string
+          nullable: true
+        upDown:
+          type: string
+          nullable: true
+        sandSave:
+          type: string
+          nullable: true
+        penalty:
+          type: integer
+          nullable: true
+        esc:
+          type: integer
+          nullable: true
+    ScoreDetails:
+      type: object
+      description: Full score details payload as returned by Golf Canada.
+      properties:
+        id:
+          type: integer
+          format: int64
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        course:
+          type: string
+          nullable: true
+        playDate:
+          type: string
+          format: date-time
+          nullable: true
+        postedDate:
+          type: string
+          format: date-time
+          nullable: true
+        tee:
+          type: string
+          nullable: true
+        slope:
+          type: integer
+          nullable: true
+        rating:
+          type: number
+          format: double
+          nullable: true
+        par:
+          type: integer
+          nullable: true
+        yardage:
+          type: integer
+          nullable: true
+        gross:
+          type: integer
+          nullable: true
+        net:
+          type: integer
+          nullable: true
+        esc:
+          type: integer
+          nullable: true
+        differential:
+          type: number
+          format: double
+          nullable: true
+        toPar:
+          type: integer
+          nullable: true
+        type:
+          type: string
+          nullable: true
+        method:
+          type: string
+          nullable: true
+        adjustedDifferential:
+          type: number
+          format: double
+          nullable: true
+        adjustment:
+          type: number
+          format: double
+          nullable: true
+        scaleTypeId:
+          type: string
+          nullable: true
+        playedDifferential:
+          type: number
+          format: double
+          nullable: true
+        expectedDifferential:
+          type: number
+          format: double
+          nullable: true
+        estimatedRating:
+          type: number
+          format: double
+          nullable: true
+        estimatedSlope:
+          type: integer
+          nullable: true
+        scaledHolesPlayed:
+          type: integer
+          nullable: true
+        isHoleByHole:
+          type: boolean
+          nullable: true
+        holesPlayed:
+          type: string
+          nullable: true
+        isTrackingStats:
+          type: boolean
+          nullable: true
+        holeScores:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/HoleScore'
+        albatross:
+          type: integer
+          nullable: true
+        eagles:
+          type: integer
+          nullable: true
+        birdies:
+          type: integer
+          nullable: true
+        pars:
+          type: integer
+          nullable: true
+        bogeys:
+          type: integer
+          nullable: true
+        doubles:
+          type: integer
+          nullable: true
+        others:
+          type: integer
+          nullable: true
+        hasGir:
+          type: boolean
+          nullable: true
+        girHit:
+          type: integer
+          nullable: true
+        girOpp:
+          type: integer
+          nullable: true
+        girPercent:
+          type: number
+          format: double
+          nullable: true
+        putts:
+          type: integer
+          nullable: true
+        puttsPerHole:
+          type: number
+          format: double
+          nullable: true
+        proximity:
+          type: number
+          format: double
+          nullable: true
+        hasFir:
+          type: boolean
+          nullable: true
+        firHit:
+          type: integer
+          nullable: true
+        firOpp:
+          type: integer
+          nullable: true
+        firPercent:
+          type: number
+          format: double
+          nullable: true
+        hasRecovery:
+          type: boolean
+          nullable: true
+        hasBounceBack:
+          type: boolean
+          nullable: true
+        bounceBackHit:
+          type: integer
+          nullable: true
+        bounceBackOpp:
+          type: integer
+          nullable: true
+        bounceBackPercent:
+          type: number
+          format: double
+          nullable: true
+        hasScramble:
+          type: boolean
+          nullable: true
+        scrambleHit:
+          type: integer
+          nullable: true
+        scrambleOpp:
+          type: integer
+          nullable: true
+        scramblePercent:
+          type: number
+          format: double
+          nullable: true
+        hasUpDown:
+          type: boolean
+          nullable: true
+        upDownHit:
+          type: integer
+          nullable: true
+        upDownOpp:
+          type: integer
+          nullable: true
+        upDownPercent:
+          type: number
+          format: double
+          nullable: true
+        hasSandSave:
+          type: boolean
+          nullable: true
+        sandSaveHit:
+          type: integer
+          nullable: true
+        sandSaveOpp:
+          type: integer
+          nullable: true
+        sandSavePercent:
+          type: number
+          format: double
+          nullable: true
+        hasParPerformance:
+          type: boolean
+          nullable: true
+        par3:
+          type: number
+          format: double
+          nullable: true
+        par4:
+          type: number
+          format: double
+          nullable: true
+        par5:
+          type: number
+          format: double
+          nullable: true
