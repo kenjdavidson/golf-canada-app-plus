@@ -1,0 +1,9 @@
+micronaut:
+  application:
+    name: golf-canada-app-plus
+  router:
+    static-resources:
+      default:
+        paths:
+          - classpath:public
+        mapping: /**
