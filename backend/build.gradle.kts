@@ -1,9 +1,12 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.0.21"
     id("org.jetbrains.kotlin.plugin.allopen") version "2.0.21"
     id("com.google.devtools.ksp") version "2.0.21-1.0.25"
     id("io.micronaut.application") version "4.4.4"
     id("io.micronaut.graalvm") version "4.4.4"
+    id("org.openapi.generator") version "7.8.0"
 }
 
 group = "com.kenjdavidson"
@@ -20,8 +23,14 @@ dependencies {
     implementation("io.micronaut.serde:micronaut-serde-jackson")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("jakarta.annotation:jakarta.annotation-api")
+    implementation("org.apache.httpcomponents:httpclient:4.5.14")
+    implementation("org.apache.httpcomponents:httpmime:4.5.14")
+    implementation("org.openapitools:jackson-databind-nullable:0.2.6")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+    runtimeOnly("org.yaml:snakeyaml")
 }
 
 application {
@@ -58,4 +67,40 @@ val copyFrontend = tasks.register<Copy>("copyFrontend") {
 
 tasks.named("processResources") {
     dependsOn(copyFrontend)
+}
+
+val generateGolfCanadaClient = tasks.register<GenerateTask>("generateGolfCanadaClient") {
+    inputSpec.set(layout.projectDirectory.file("src/main/openapi/golf-canada-api.yaml").asFile.absolutePath)
+    outputDir.set(layout.buildDirectory.dir("generated/openapi/golfcanada-client").get().asFile.absolutePath)
+    generatorName.set("java")
+    library.set("native")
+    apiPackage.set("com.kenjdavidson.golfcanada.golfcanada.api")
+    modelPackage.set("com.kenjdavidson.golfcanada.golfcanada.model")
+    invokerPackage.set("com.kenjdavidson.golfcanada.golfcanada.client")
+    configOptions.set(
+        mapOf(
+            "dateLibrary" to "java8",
+            "serializationLibrary" to "jackson",
+            "useJakartaEe" to "true",
+            "hideGenerationTimestamp" to "true",
+        ),
+    )
+}
+
+sourceSets.main {
+    java.srcDir(layout.buildDirectory.dir("generated/openapi/golfcanada-client/src/main/java"))
+}
+
+tasks.named("compileJava") {
+    dependsOn(generateGolfCanadaClient)
+}
+
+tasks.named("compileKotlin") {
+    dependsOn(generateGolfCanadaClient)
+}
+
+tasks.configureEach {
+    if (name.startsWith("ksp")) {
+        dependsOn(generateGolfCanadaClient)
+    }
 }
