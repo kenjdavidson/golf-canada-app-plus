@@ -37,10 +37,9 @@ private fun configureGolfCanadaTrustOrThrow() {
 
 private fun loadGolfCanadaCertificate(): X509Certificate {
     val certificateFactory = CertificateFactory.getInstance("X.509")
-    val certificateNotFoundMessage = "Certificate resource not found on classpath: $GOLF_CANADA_CERTIFICATE_PATH"
     val certificateStream = requireNotNull(
         Thread.currentThread().contextClassLoader.getResourceAsStream(GOLF_CANADA_CERTIFICATE_PATH),
-    ) { certificateNotFoundMessage }
+    ) { "Certificate resource not found on classpath: " + GOLF_CANADA_CERTIFICATE_PATH }
 
     return certificateStream.use {
         certificateFactory.generateCertificate(it) as X509Certificate
