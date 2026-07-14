@@ -3,10 +3,11 @@ package com.kenjdavidson.golfcanada.security
 import com.kenjdavidson.golfcanada.golfcanada.api.AuthenticationApi
 import com.kenjdavidson.golfcanada.security.exception.GolfCanadaExpiredException
 import jakarta.inject.Singleton
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.slf4j.LoggerFactory
+import reactor.core.publisher.Mono
 import java.time.Instant
 
 private val TOKEN_REFRESH_BUFFER = java.time.Duration.ofSeconds(300)
@@ -18,9 +19,13 @@ private val TOKEN_REFRESH_BUFFER = java.time.Duration.ofSeconds(300)
  * close to expiry (within a 5-minute buffer) and the user has opted into "remember me", this
  * manager transparently refreshes it using the stored refresh token.
  *
- * A [Mutex] ensures that only one coroutine executes the refresh flow at a time — preventing the
- * classic OAuth race condition where two concurrent requests both try to use an already-invalidated
- * refresh token.  Waiting coroutines re-read the newly-saved token once the lock is released.
+ * A coroutine [Mutex] ensures that only one coroutine executes the refresh flow at a time —
+ * preventing the classic OAuth race condition where two concurrent requests both try to use an
+ * already-invalidated refresh token.  Waiting coroutines re-read the newly-saved token once the
+ * lock is released.
+ *
+ * [getValidAccessToken] returns a [Mono] so that callers can subscribe it into an existing
+ * reactive pipeline without blocking the Netty event loop.
  */
 @Singleton
 class GolfCanadaTokenManager(
@@ -31,16 +36,14 @@ class GolfCanadaTokenManager(
     private val refreshMutex = Mutex()
 
     /**
-     * Returns a valid Golf Canada access token for [username].
+     * Returns a [Mono] that emits a valid Golf Canada access token for [username].
      *
      * If the stored token is still valid (beyond the 5-minute buffer) it is returned immediately.
      * If it has expired and the user opted into "remember me", the token is refreshed.
      * If no session exists, or the refresh token itself has expired, a [GolfCanadaExpiredException]
-     * is thrown — callers should clear the session cookie and redirect the user to login.
-     *
-     * This method is safe to call concurrently from multiple threads.
+     * is signalled — callers should clear the session cookie and redirect the user to login.
      */
-    fun getValidAccessToken(username: String): String = runBlocking {
+    fun getValidAccessToken(username: String): Mono<String> = mono {
         refreshMutex.withLock {
             val session = tokenStorage.getSession(username)
                 ?: throw GolfCanadaExpiredException("No session found for user: $username")
@@ -52,7 +55,10 @@ class GolfCanadaTokenManager(
             }
 
             if (!session.rememberMe) {
-                log.info("Access token expired for user {} and rememberMe=false — clearing session", username)
+                log.info(
+                    "Access token expired for user {} and rememberMe=false — clearing session",
+                    username,
+                )
                 tokenStorage.clearSession(username)
                 throw GolfCanadaExpiredException(
                     "Golf Canada access token expired for user $username and rememberMe is disabled.",
@@ -63,13 +69,11 @@ class GolfCanadaTokenManager(
                 ?: run {
                     log.warn("No refresh token available for user {} — clearing session", username)
                     tokenStorage.clearSession(username)
-                    throw GolfCanadaExpiredException(
-                        "No refresh token stored for user $username.",
-                    )
+                    throw GolfCanadaExpiredException("No refresh token stored for user $username.")
                 }
 
             log.info("Refreshing Golf Canada access token for user {}", username)
-            return@withLock refreshTokens(username, refreshToken)
+            refreshTokens(username, refreshToken)
         }
     }
 
@@ -108,7 +112,11 @@ class GolfCanadaTokenManager(
         } catch (e: GolfCanadaExpiredException) {
             throw e
         } catch (e: Exception) {
-            log.warn("Failed to refresh Golf Canada access token for user {}: {}", username, e.message)
+            log.warn(
+                "Failed to refresh Golf Canada access token for user {}: {}",
+                username,
+                e.message,
+            )
             tokenStorage.clearSession(username)
             throw GolfCanadaExpiredException(
                 "Golf Canada refresh token for user $username has been revoked or has expired.",

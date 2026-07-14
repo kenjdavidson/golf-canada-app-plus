@@ -5,6 +5,8 @@ import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
+import java.nio.file.InvalidPathException
+import java.nio.file.Path
 import java.sql.Connection
 import java.sql.DriverManager
 import java.time.Instant
@@ -36,8 +38,9 @@ class GolfCanadaTokenStorage(
 
     @PostConstruct
     fun initialize() {
-        log.info("Opening Golf Canada session database at {}", dbPath)
-        connection = DriverManager.getConnection("jdbc:sqlite:$dbPath")
+        val safePath = resolveSafeDbPath(dbPath)
+        log.info("Opening Golf Canada session database at {}", safePath)
+        connection = DriverManager.getConnection("jdbc:sqlite:$safePath")
         connection.createStatement().use { stmt ->
             stmt.execute("PRAGMA journal_mode=WAL")
             stmt.execute(
@@ -61,6 +64,24 @@ class GolfCanadaTokenStorage(
     fun close() {
         if (::connection.isInitialized && !connection.isClosed) {
             connection.close()
+        }
+    }
+
+    /**
+     * Resolves [rawPath] to a safe, normalised file path, rejecting obvious path-traversal
+     * attempts (e.g. paths containing `..` segments after normalisation).
+     */
+    private fun resolveSafeDbPath(rawPath: String): Path {
+        try {
+            val normalised = Path.of(rawPath).normalize()
+            if (normalised.any { it.toString() == ".." }) {
+                throw IllegalArgumentException(
+                    "GOLF_CANADA_SESSION_DB_PATH contains illegal path traversal: $rawPath",
+                )
+            }
+            return normalised
+        } catch (e: InvalidPathException) {
+            throw IllegalArgumentException("GOLF_CANADA_SESSION_DB_PATH is not a valid path: $rawPath", e)
         }
     }
 

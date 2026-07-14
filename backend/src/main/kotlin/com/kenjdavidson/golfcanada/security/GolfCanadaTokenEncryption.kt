@@ -25,6 +25,8 @@ private const val GCM_TAG_LENGTH_BITS = 128
 class GolfCanadaTokenEncryption(
     @Value("\${golf-canada-app.security.token-encryption-key}") private val tokenEncryptionKey: String,
 ) {
+    private val secureRandom = SecureRandom()
+
     private val secretKey: SecretKeySpec by lazy {
         val keyBytes = MessageDigest.getInstance("SHA-256").digest(
             tokenEncryptionKey.toByteArray(Charsets.UTF_8),
@@ -36,7 +38,7 @@ class GolfCanadaTokenEncryption(
      * Encrypts [plaintext] and returns a Base64-encoded string of `IV || ciphertext`.
      */
     fun encrypt(plaintext: String): String {
-        val iv = ByteArray(GCM_IV_LENGTH).also { SecureRandom().nextBytes(it) }
+        val iv = ByteArray(GCM_IV_LENGTH).also { secureRandom.nextBytes(it) }
         val cipher = Cipher.getInstance(AES_GCM_TRANSFORMATION).apply {
             init(Cipher.ENCRYPT_MODE, secretKey, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
         }
