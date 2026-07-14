@@ -165,8 +165,6 @@ components:
       type: object
       required:
         - grant_type
-        - username
-        - password
       properties:
         grant_type:
           type: string
@@ -182,6 +180,8 @@ components:
         client_id:
           type: string
         client_secret:
+          type: string
+        refresh_token:
           type: string
     AuthToken:
       type: object
