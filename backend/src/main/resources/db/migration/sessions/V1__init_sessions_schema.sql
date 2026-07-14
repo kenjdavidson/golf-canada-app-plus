@@ -4,5 +4,6 @@ CREATE TABLE user_sessions (
     access_token TEXT NOT NULL,
     refresh_token TEXT,
     expires_at TEXT NOT NULL,
+    -- SQLite represents booleans as INTEGER 0/1 values.
     remember_me INTEGER NOT NULL DEFAULT 0
 );
