@@ -63,18 +63,12 @@ class DatabaseTokenStorage(
     ) {
         transaction(databaseInitializer.sessionsDb) {
             val newExpiresAt = Instant.now().plusSeconds(expiresInSeconds).toString()
-
-            if (newRefreshToken == null) {
-                UserSessionsTable.update({ UserSessionsTable.username eq username }) { row ->
-                    row[accessToken] = encryption.encrypt(newAccessToken)
-                    row[expiresAt] = newExpiresAt
-                }
-            } else {
-                UserSessionsTable.update({ UserSessionsTable.username eq username }) { row ->
-                    row[accessToken] = encryption.encrypt(newAccessToken)
+            UserSessionsTable.update({ UserSessionsTable.username eq username }) { row ->
+                row[accessToken] = encryption.encrypt(newAccessToken)
+                if (newRefreshToken != null) {
                     row[refreshToken] = encryption.encrypt(newRefreshToken)
-                    row[expiresAt] = newExpiresAt
                 }
+                row[expiresAt] = newExpiresAt
             }
         }
     }
