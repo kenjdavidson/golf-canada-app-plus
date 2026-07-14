@@ -11,8 +11,8 @@ import java.time.Instant
  */
 data class GolfCanadaAuthenticatedUser(
     val username: String,
-    val individualId: Long?,
-    val fullName: String?,
+    val individualId: Long,
+    val fullName: String,
     val accessToken: String,
     val refreshToken: String?,
     val expiresAt: Instant,
@@ -32,6 +32,12 @@ data class GolfCanadaAuthenticatedUser(
             val username = user.username
                 ?: throw IncompleteGolfCanadaAuthenticationException("AuthToken user is missing the username field")
 
+            val individualId = user.id
+                ?: throw IncompleteGolfCanadaAuthenticationException("AuthToken user is missing the id field")
+
+            val fullName = user.fullName
+                ?: throw IncompleteGolfCanadaAuthenticationException("AuthToken user is missing the fullName field")
+
             val accessToken = authToken.accessToken
                 ?: throw IncompleteGolfCanadaAuthenticationException("AuthToken is missing the access_token field")
 
@@ -40,8 +46,8 @@ data class GolfCanadaAuthenticatedUser(
 
             return GolfCanadaAuthenticatedUser(
                 username = username,
-                individualId = user.id,
-                fullName = user.fullName,
+                individualId = individualId,
+                fullName = fullName,
                 accessToken = accessToken,
                 refreshToken = authToken.refreshToken,
                 expiresAt = Instant.now().plusSeconds(expiresIn.toLong()),

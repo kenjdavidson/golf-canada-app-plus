@@ -33,7 +33,6 @@ dependencies {
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
     implementation("org.apache.httpcomponents:httpmime:4.5.14")
     implementation("org.openapitools:jackson-databind-nullable:0.2.6")
-    implementation("org.xerial:sqlite-jdbc:3.47.1.0")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
     runtimeOnly("org.yaml:snakeyaml")

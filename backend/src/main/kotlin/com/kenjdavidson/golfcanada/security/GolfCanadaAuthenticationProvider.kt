@@ -82,9 +82,9 @@ class GolfCanadaAuthenticationProvider(
         }
     }
 
-    private fun buildClaims(user: GolfCanadaAuthenticatedUser): Map<String, Any?> = buildMap {
-        user.individualId?.let { put("individualId", it) }
-        user.fullName?.let { put("fullName", it) }
+    private fun buildClaims(user: GolfCanadaAuthenticatedUser): Map<String, Any> = buildMap {
+        put("individualId", user.individualId)
+        put("fullName", user.fullName)
         put("rememberMe", user.rememberMe)
     }
 }

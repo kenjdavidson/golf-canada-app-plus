@@ -43,4 +43,3 @@ micronaut:
 golf-canada-app:
   security:
     token-encryption-key: "${GOLF_CANADA_TOKEN_ENCRYPTION_KEY}"
-    session-db-path: "${GOLF_CANADA_SESSION_DB_PATH:./sessions.db}"

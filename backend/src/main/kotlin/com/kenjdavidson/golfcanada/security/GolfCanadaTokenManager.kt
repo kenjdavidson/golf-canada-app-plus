@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono
 import java.time.Instant
 
 private val TOKEN_REFRESH_BUFFER = java.time.Duration.ofSeconds(300)
+private const val DEFAULT_SCOPE = "address email offline_access openid phone profile roles"
 
 /**
  * Manages Golf Canada access tokens for authenticated users.
@@ -84,7 +85,7 @@ class GolfCanadaTokenManager(
                 null,
                 null,
                 null,
-                null,
+                DEFAULT_SCOPE,
                 null,
                 null,
                 refreshToken,
