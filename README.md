@@ -5,6 +5,54 @@ Golf Canada App mini-app provides enhanced game modes, data tracking and followe
 
 The Micronaut backend ships with `backend/src/main/resources/ssl/golfcanada.pem` and loads it into the default JVM trust chain during application startup.
 
+## Backend Security
+
+The backend uses Micronaut Security with cookie-based JWT authentication backed by the Golf Canada authentication API.
+
+### Required environment variables
+
+The application **will not start** without the following environment variables:
+
+| Variable | Description |
+|---|---|
+| `JWT_SIGNING_SECRET` | HS256 signing secret for Micronaut JWT cookies. Use a long random string (≥ 32 characters). |
+| `GOLF_CANADA_TOKEN_ENCRYPTION_KEY` | Passphrase used to derive an AES-256 key for encrypting Golf Canada tokens at rest. Use a long random string. |
+
+### Optional environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `GOLF_CANADA_SESSION_DB_PATH` | `./sessions.db` | File path for the SQLite database that stores encrypted user sessions. |
+
+### Login
+
+`POST /api/login` — accepts a JSON body `{"username": "...", "password": "..."}`.
+
+Append `?rememberMe=true` to enable proactive Golf Canada access-token refresh:
+
+```
+POST /api/login?rememberMe=true
+Content-Type: application/json
+
+{"username": "user@example.com", "password": "secret"}
+```
+
+On success a JWT cookie is set (valid for 30 days). On failure the response includes an authentication failure reason.
+
+### Logout
+
+`GET /api/logout` — clears the JWT cookie.
+
+### API security
+
+All routes under `/api/**` (except `/api/login`) require an authenticated JWT cookie.  Static frontend assets served at `/**` are public.
+
+### Token management
+
+Golf Canada access tokens are stored encrypted (AES-256-GCM) in a local SQLite database.  When a token is near expiry and `rememberMe` is enabled, `GolfCanadaTokenManager` silently refreshes it using the stored refresh token. A `Mutex` ensures only one refresh runs at a time to prevent the OAuth race condition where two concurrent requests both try to redeem an already-invalidated refresh token.
+
+If the Golf Canada refresh token itself expires or is revoked, the local session is cleared and the browser is redirected to `/login` with an expired cookie header.
+
 ## Golf Canada OpenAPI client
 
 Golf Canada client APIs are generated at build time from `backend/src/main/openapi/golf-canada-api.yaml` using OpenAPI Generator.
@@ -17,7 +65,7 @@ Golf Canada client APIs are generated at build time from `backend/src/main/opena
 Currently available generated API groups and operations:
 
 - `AuthenticationApi`
-  - `authenticate` (`POST /connect/token`)
+  - `authenticate` (`POST /connect/token`) — supports `grant_type=password` and `grant_type=refresh_token`
 - `MembersApi`
   - `getProfile` (`GET /api/scores/getProfile`)
   - `searchMembers` (`GET /api/members/search`)

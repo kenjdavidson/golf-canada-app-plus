@@ -7,3 +7,39 @@ micronaut:
         paths:
           - classpath:public
         mapping: /**
+  security:
+    authentication: cookie
+    endpoints:
+      login:
+        path: /api/login
+      logout:
+        path: /api/logout
+    intercept-url-map:
+      - pattern: /api/login
+        access:
+          - isAnonymous()
+      - pattern: /api/logout
+        access:
+          - isAuthenticated()
+      - pattern: /api/**
+        access:
+          - isAuthenticated()
+      - pattern: /**
+        access:
+          - isAnonymous()
+    token:
+      jwt:
+        cookie:
+          enabled: true
+          cookie-max-age: 30d
+          login-failure-target-url: /login
+          login-success-target-url: /
+        signatures:
+          secret:
+            generator:
+              secret: "${JWT_SIGNING_SECRET}"
+              jws-algorithm: HS256
+
+golf-canada-app:
+  security:
+    token-encryption-key: "${GOLF_CANADA_TOKEN_ENCRYPTION_KEY}"
