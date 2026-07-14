@@ -65,9 +65,7 @@ class DatabaseTokenStorage(
             val newExpiresAt = Instant.now().plusSeconds(expiresInSeconds).toString()
             UserSessionsTable.update({ UserSessionsTable.username eq username }) { row ->
                 row[accessToken] = encryption.encrypt(newAccessToken)
-                if (newRefreshToken != null) {
-                    row[refreshToken] = encryption.encrypt(newRefreshToken)
-                }
+                row[refreshToken] = newRefreshToken?.let(encryption::encrypt)
                 row[expiresAt] = newExpiresAt
             }
         }

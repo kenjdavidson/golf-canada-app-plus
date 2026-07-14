@@ -104,7 +104,7 @@ class GolfCanadaTokenManager(
             tokenStorage.updateSession(
                 username = username,
                 newAccessToken = newAccessToken,
-                newRefreshToken = newTokens.refreshToken,
+                newRefreshToken = newTokens.refreshToken ?: refreshToken,
                 expiresInSeconds = expiresIn,
             )
 
