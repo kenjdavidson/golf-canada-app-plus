@@ -12,13 +12,12 @@ import org.jetbrains.exposed.sql.upsert
 import java.time.Instant
 
 private const val MAX_USERNAME_LENGTH = 255
-private const val MAX_INSTANT_STRING_LENGTH = 32 // ISO-8601 UTC instant strings fit comfortably.
 
 object UserSessionsTable : IntIdTable("user_sessions") {
     val username = varchar("username", MAX_USERNAME_LENGTH).uniqueIndex()
     val accessToken = text("access_token")
     val refreshToken = text("refresh_token").nullable()
-    val expiresAt = varchar("expires_at", MAX_INSTANT_STRING_LENGTH)
+    val expiresAt = text("expires_at")
     val rememberMe = bool("remember_me").default(false)
 }
 
