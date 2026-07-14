@@ -5,14 +5,16 @@ import jakarta.inject.Singleton
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.upsert
 import java.time.Instant
 
+private const val MAX_USERNAME_LENGTH = 255
+
 object UserSessionsTable : IntIdTable("user_sessions") {
-    val username = varchar("username", 255).uniqueIndex()
+    val username = varchar("username", MAX_USERNAME_LENGTH).uniqueIndex()
     val accessToken = text("access_token")
     val refreshToken = text("refresh_token").nullable()
     val expiresAt = varchar("expires_at", 50)
@@ -24,11 +26,9 @@ class DatabaseTokenStorage(
     private val databaseInitializer: DatabaseInitializer,
     private val encryption: GolfCanadaTokenEncryption,
 ) : GolfCanadaTokenStorage {
-
     override fun saveSession(user: GolfCanadaAuthenticatedUser) {
         transaction(databaseInitializer.sessionsDb) {
-            UserSessionsTable.deleteWhere { UserSessionsTable.username eq user.username }
-            UserSessionsTable.insert { row ->
+            UserSessionsTable.upsert(UserSessionsTable.username) { row ->
                 row[username] = user.username
                 row[accessToken] = encryption.encrypt(user.accessToken)
                 row[refreshToken] = user.refreshToken?.let(encryption::encrypt)
