@@ -21,6 +21,8 @@ dependencies {
     ksp("io.micronaut.serde:micronaut-serde-processor")
     ksp("io.micronaut.security:micronaut-security-annotations")
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
+    implementation("io.micronaut.sql:micronaut-jdbc-hikari")
+    implementation("io.micronaut.flyway:micronaut-flyway")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
     implementation("io.micronaut.security:micronaut-security-jwt")
     implementation("io.micronaut.reactor:micronaut-reactor")
@@ -28,6 +30,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.8.1")
+    implementation("org.jetbrains.exposed:exposed-core:0.53.0")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.53.0")
+    implementation("org.jetbrains.exposed:exposed-dao:0.53.0")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("jakarta.annotation:jakarta.annotation-api")
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
@@ -35,6 +40,7 @@ dependencies {
     implementation("org.openapitools:jackson-databind-nullable:0.2.6")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+    runtimeOnly("org.xerial:sqlite-jdbc:3.46.1.3")
     runtimeOnly("org.yaml:snakeyaml")
 }
 

@@ -24,6 +24,11 @@ The application **will not start** without the following environment variables:
 |---|---|---|
 | `GOLF_CANADA_SESSION_DB_PATH` | `./sessions.db` | File path for the SQLite database that stores encrypted user sessions. |
 
+The backend uses two SQLite databases:
+
+- `golfapp.db` for the primary application schema
+- `sessions.db` (or `GOLF_CANADA_SESSION_DB_PATH`) for encrypted Golf Canada session tokens
+
 ### Login
 
 `POST /api/login` — accepts a JSON body `{"username": "...", "password": "..."}`.

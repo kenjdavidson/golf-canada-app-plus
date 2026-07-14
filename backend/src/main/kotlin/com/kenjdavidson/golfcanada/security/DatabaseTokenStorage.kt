@@ -1,0 +1,84 @@
+package com.kenjdavidson.golfcanada.security
+
+import com.kenjdavidson.golfcanada.database.DatabaseInitializer
+import jakarta.inject.Singleton
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
+import java.time.Instant
+
+object UserSessionsTable : IntIdTable("user_sessions") {
+    val username = varchar("username", 255).uniqueIndex()
+    val accessToken = text("access_token")
+    val refreshToken = text("refresh_token").nullable()
+    val expiresAt = varchar("expires_at", 50)
+    val rememberMe = bool("remember_me").default(false)
+}
+
+@Singleton
+class DatabaseTokenStorage(
+    private val databaseInitializer: DatabaseInitializer,
+    private val encryption: GolfCanadaTokenEncryption,
+) : GolfCanadaTokenStorage {
+
+    override fun saveSession(user: GolfCanadaAuthenticatedUser) {
+        transaction(databaseInitializer.sessionsDb) {
+            UserSessionsTable.deleteWhere { UserSessionsTable.username eq user.username }
+            UserSessionsTable.insert { row ->
+                row[username] = user.username
+                row[accessToken] = encryption.encrypt(user.accessToken)
+                row[refreshToken] = user.refreshToken?.let(encryption::encrypt)
+                row[expiresAt] = user.expiresAt.toString()
+                row[rememberMe] = user.rememberMe
+            }
+        }
+    }
+
+    override fun getSession(username: String): GolfCanadaUserSession? = transaction(databaseInitializer.sessionsDb) {
+        UserSessionsTable
+            .selectAll()
+            .where { UserSessionsTable.username eq username }
+            .firstOrNull()
+            ?.let { row ->
+                GolfCanadaUserSession(
+                    username = row[UserSessionsTable.username],
+                    accessToken = encryption.decrypt(row[UserSessionsTable.accessToken]),
+                    refreshToken = row[UserSessionsTable.refreshToken]?.let(encryption::decrypt),
+                    expiresAt = Instant.parse(row[UserSessionsTable.expiresAt]),
+                    rememberMe = row[UserSessionsTable.rememberMe],
+                )
+            }
+    }
+
+    override fun updateSession(
+        username: String,
+        newAccessToken: String,
+        newRefreshToken: String?,
+        expiresInSeconds: Long,
+    ) {
+        transaction(databaseInitializer.sessionsDb) {
+            val existingRow = UserSessionsTable
+                .selectAll()
+                .where { UserSessionsTable.username eq username }
+                .firstOrNull()
+                ?: return@transaction
+
+            UserSessionsTable.update({ UserSessionsTable.username eq username }) { row ->
+                row[accessToken] = encryption.encrypt(newAccessToken)
+                row[refreshToken] = newRefreshToken?.let(encryption::encrypt)
+                    ?: existingRow[UserSessionsTable.refreshToken]
+                row[expiresAt] = Instant.now().plusSeconds(expiresInSeconds).toString()
+            }
+        }
+    }
+
+    override fun clearSession(username: String) {
+        transaction(databaseInitializer.sessionsDb) {
+            UserSessionsTable.deleteWhere { UserSessionsTable.username eq username }
+        }
+    }
+}
