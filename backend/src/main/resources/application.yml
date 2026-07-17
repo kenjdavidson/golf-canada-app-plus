@@ -42,7 +42,7 @@ micronaut:
 
 datasources:
   default:
-    url: "jdbc:sqlite:golfapp.db"
+    url: "jdbc:sqlite:${GOLF_CANADA_PRIMARY_DB_PATH:./golfapp.db}"
     driver-class-name: "org.sqlite.JDBC"
   sessions:
     url: "jdbc:sqlite:${GOLF_CANADA_SESSION_DB_PATH:./sessions.db}"

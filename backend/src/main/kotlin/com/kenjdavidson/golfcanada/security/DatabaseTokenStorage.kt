@@ -2,7 +2,6 @@ package com.kenjdavidson.golfcanada.security
 
 import com.kenjdavidson.golfcanada.database.DatabaseInitializer
 import jakarta.inject.Singleton
-import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.selectAll
@@ -10,16 +9,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.upsert
 import java.time.Instant
-
-private const val MAX_USERNAME_LENGTH = 255
-
-object UserSessionsTable : IntIdTable("user_sessions") {
-    val username = varchar("username", MAX_USERNAME_LENGTH).uniqueIndex()
-    val accessToken = text("access_token")
-    val refreshToken = text("refresh_token").nullable()
-    val expiresAt = text("expires_at")
-    val rememberMe = bool("remember_me").default(false)
-}
 
 @Singleton
 class DatabaseTokenStorage(
@@ -32,7 +21,7 @@ class DatabaseTokenStorage(
                 row[username] = user.username
                 row[accessToken] = encryption.encrypt(user.accessToken)
                 row[refreshToken] = user.refreshToken?.let(encryption::encrypt)
-                row[expiresAt] = user.expiresAt.toString()
+                row[expiresAt] = user.expiresAt.toEpochMilli()
                 row[rememberMe] = user.rememberMe
             }
         }
@@ -48,7 +37,7 @@ class DatabaseTokenStorage(
                     username = row[UserSessionsTable.username],
                     accessToken = encryption.decrypt(row[UserSessionsTable.accessToken]),
                     refreshToken = row[UserSessionsTable.refreshToken]?.let(encryption::decrypt),
-                    expiresAt = Instant.parse(row[UserSessionsTable.expiresAt]),
+                    expiresAt = Instant.ofEpochMilli(row[UserSessionsTable.expiresAt]),
                     rememberMe = row[UserSessionsTable.rememberMe],
                 )
             }
@@ -61,7 +50,7 @@ class DatabaseTokenStorage(
         expiresInSeconds: Long,
     ) {
         transaction(databaseInitializer.sessionsDb) {
-            val newExpiresAt = Instant.now().plusSeconds(expiresInSeconds).toString()
+            val newExpiresAt = Instant.now().plusSeconds(expiresInSeconds).toEpochMilli()
             UserSessionsTable.update({ UserSessionsTable.username eq username }) { row ->
                 row[accessToken] = encryption.encrypt(newAccessToken)
                 row[refreshToken] = newRefreshToken?.let(encryption::encrypt)

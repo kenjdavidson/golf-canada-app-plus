@@ -22,11 +22,12 @@ The application **will not start** without the following environment variables:
 
 | Variable | Default | Description |
 |---|---|---|
+| `GOLF_CANADA_PRIMARY_DB_PATH` | `./golfapp.db` | File path only (not a full JDBC URL) for the primary SQLite application database. |
 | `GOLF_CANADA_SESSION_DB_PATH` | `./sessions.db` | File path only (not a full JDBC URL) for the SQLite database that stores encrypted user sessions. |
 
 The backend uses two SQLite databases:
 
-- `golfapp.db` for the primary application schema
+- `golfapp.db` (or `GOLF_CANADA_PRIMARY_DB_PATH`) for the primary application schema
 - `sessions.db` (or `GOLF_CANADA_SESSION_DB_PATH`) for encrypted Golf Canada session tokens
 
 ### Login
