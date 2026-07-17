@@ -58,3 +58,7 @@ out/
 # ===== Log files =====
 *.log
 logs/
+
+# ===== Local SQLite databases =====
+*.db
+*.db-*

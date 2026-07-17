@@ -40,6 +40,25 @@ micronaut:
               secret: "${JWT_SIGNING_SECRET}"
               jws-algorithm: HS256
 
+datasources:
+  default:
+    url: "jdbc:sqlite:${GOLF_CANADA_PRIMARY_DB_PATH:./golfapp.db}"
+    driver-class-name: "org.sqlite.JDBC"
+  sessions:
+    url: "jdbc:sqlite:${GOLF_CANADA_SESSION_DB_PATH:./sessions.db}"
+    driver-class-name: "org.sqlite.JDBC"
+
+flyway:
+  datasources:
+    default:
+      enabled: true
+      locations:
+        - "classpath:db/migration/primary"
+    sessions:
+      enabled: true
+      locations:
+        - "classpath:db/migration/sessions"
+
 golf-canada-app:
   security:
     token-encryption-key: "${GOLF_CANADA_TOKEN_ENCRYPTION_KEY}"
