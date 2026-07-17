@@ -56,6 +56,7 @@ jobs:
         run: |
           mkdir -p release-artifacts
           runner_jars_file="$(mktemp)"
+          trap 'rm -f "$runner_jars_file"' EXIT
           find backend/build/libs -maxdepth 1 -name "*-runner.jar" -type f > "$runner_jars_file"
           runner_count="$(grep -c . "$runner_jars_file" || true)"
           if [ "$runner_count" -ne 1 ]; then
