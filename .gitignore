@@ -39,6 +39,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 dist/
+backend/src/main/resources/public/
 .env
 .env.local
 .env.*.local
