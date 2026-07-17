@@ -47,7 +47,7 @@ On success a JWT cookie is set (valid for 30 days). On failure the response incl
 
 ### Logout
 
-`GET /api/logout` — clears the JWT cookie.
+`POST /api/logout` — clears the JWT cookie.
 
 ### API security
 
