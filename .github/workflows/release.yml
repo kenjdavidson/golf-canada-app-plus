@@ -55,8 +55,9 @@ jobs:
       - name: Package release artifacts
         run: |
           mkdir -p release-artifacts
-          runner_jars="$(find backend/build/libs -maxdepth 1 -name "*-runner.jar" -type f)"
-          runner_count="$(printf '%s\n' "$runner_jars" | sed '/^$/d' | wc -l)"
+          runner_jars_file="$(mktemp)"
+          find backend/build/libs -maxdepth 1 -name "*-runner.jar" -type f > "$runner_jars_file"
+          runner_count="$(grep -c . "$runner_jars_file" || true)"
           if [ "$runner_count" -ne 1 ]; then
             echo "Expected exactly one runner jar but found $runner_count."
             echo "Check that the backend runner build step completed and that it produced a single *-runner.jar artifact."
@@ -64,12 +65,16 @@ jobs:
               echo "No files matched backend/build/libs/*-runner.jar"
             else
               echo "Matched files:"
-              printf '%s\n' "$runner_jars"
+              cat "$runner_jars_file"
             fi
             exit 1
           fi
-          runner_jar="$(printf '%s\n' "$runner_jars" | head -n 1)"
+          runner_jar="$(head -n 1 "$runner_jars_file")"
           cp "$runner_jar" "release-artifacts/$(basename "$runner_jar")"
+          if [ ! -d frontend/dist ] || [ -z "$(find frontend/dist -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+            echo "frontend/dist is missing or empty. Check the frontend build step output."
+            exit 1
+          fi
           cd frontend/dist
           zip -r ../../release-artifacts/frontend-dist.zip .
 
