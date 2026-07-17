@@ -59,6 +59,7 @@ jobs:
           runner_count="$(printf '%s\n' "$runner_jars" | sed '/^$/d' | wc -l)"
           if [ "$runner_count" -ne 1 ]; then
             echo "Expected exactly one runner jar but found $runner_count."
+            echo "Check that the backend runner build step completed and that it produced a single *-runner.jar artifact."
             if [ "$runner_count" -eq 0 ]; then
               echo "No files matched backend/build/libs/*-runner.jar"
             else
