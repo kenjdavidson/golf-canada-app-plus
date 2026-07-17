@@ -60,8 +60,7 @@ jobs:
           find backend/build/libs -maxdepth 1 -name "*-runner.jar" -type f > "$runner_jars_file"
           runner_count="$(grep -c . "$runner_jars_file" || true)"
           if [ "$runner_count" -ne 1 ]; then
-            echo "Expected exactly one runner jar but found $runner_count."
-            echo "Check that the backend runner build step completed and that it produced a single *-runner.jar artifact."
+            echo "Error: Expected exactly one *-runner.jar but found $runner_count. Verify the runnerJar task configuration produces a single output file."
             if [ "$runner_count" -eq 0 ]; then
               echo "No files matched backend/build/libs/*-runner.jar"
             else
@@ -73,7 +72,7 @@ jobs:
           runner_jar="$(head -n 1 "$runner_jars_file")"
           cp "$runner_jar" "release-artifacts/$(basename "$runner_jar")"
           if [ ! -d frontend/dist ] || [ -z "$(find frontend/dist -mindepth 1 -maxdepth 1 -print -quit)" ]; then
-            echo "frontend/dist is missing or empty. Check the frontend build step output."
+            echo "Error: frontend/dist directory is missing or empty. Verify the frontend build completed successfully and generated output files."
             exit 1
           fi
           cd frontend/dist
