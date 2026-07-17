@@ -53,12 +53,18 @@ jobs:
         run: ./gradlew :backend:runnerJar
 
       - name: Package release artifacts
+        shell: bash
         run: |
           mkdir -p release-artifacts
           mapfile -t runner_jars < <(find backend/build/libs -maxdepth 1 -name "*-runner.jar" -type f)
           if [ "${#runner_jars[@]}" -ne 1 ]; then
-            echo "Expected exactly one runner jar, found ${#runner_jars[@]}"
-            printf '%s\n' "${runner_jars[@]}"
+            echo "Expected exactly one runner jar but found ${#runner_jars[@]}."
+            if [ "${#runner_jars[@]}" -eq 0 ]; then
+              echo "No files matched backend/build/libs/*-runner.jar"
+            else
+              echo "Matched files:"
+              printf '%s\n' "${runner_jars[@]}"
+            fi
             exit 1
           fi
           cp "${runner_jars[0]}" release-artifacts/
