@@ -14,6 +14,7 @@ micronaut:
         path: /api/login
       logout:
         path: /api/logout
+        get-allowed: true
     intercept-url-map:
       - pattern: /api/login
         access:
