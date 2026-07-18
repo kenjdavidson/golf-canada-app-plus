@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to release from
+        required: true
+        default: main
+        type: string
+      tag:
+        description: Optional tag override (defaults to v<backend Gradle version>)
+        required: false
+        type: string
+      release_name:
+        description: Optional release title (defaults to tag)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Build frontend
+        run: |
+          npm --prefix frontend ci
+          npm --prefix frontend run build
+
+      - name: Build backend release jar
+        run: ./gradlew :backend:runnerJar
+
+      - name: Resolve release tag
+        id: release_tag
+        run: |
+          backend_version="$(./gradlew -q :backend:properties | awk -F': ' '/^version:/ {print $2; exit}')"
+          if [ -z "$backend_version" ]; then
+            echo "Failed to resolve backend Gradle project version."
+            exit 1
+          fi
+          if [ -n "${{ inputs.tag }}" ]; then
+            release_tag="${{ inputs.tag }}"
+          else
+            release_tag="v${backend_version}"
+          fi
+          echo "value=$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Package release artifacts
+        run: |
+          mkdir -p release-artifacts
+          runner_jars_file="$(mktemp)"
+          trap 'rm -f "$runner_jars_file"' EXIT
+          find backend/build/libs -maxdepth 1 -name "*-runner.jar" -type f > "$runner_jars_file"
+          runner_count="$(grep -c . "$runner_jars_file" || true)"
+          if [ "$runner_count" -ne 1 ]; then
+            echo "Error: Expected exactly one *-runner.jar but found $runner_count. Verify the runnerJar task configuration produces a single output file."
+            if [ "$runner_count" -eq 0 ]; then
+              echo "No files matched backend/build/libs/*-runner.jar"
+            else
+              echo "Matched files:"
+              cat "$runner_jars_file"
+            fi
+            exit 1
+          fi
+          runner_jar="$(head -n 1 "$runner_jars_file")"
+          cp "$runner_jar" "release-artifacts/$(basename "$runner_jar")"
+          if [ ! -d frontend/dist ] || [ -z "$(find frontend/dist -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+            echo "Error: frontend/dist directory is missing or empty. Verify the frontend build completed successfully and generated output files."
+            exit 1
+          fi
+          cd frontend/dist
+          zip -r ../../release-artifacts/frontend-dist.zip .
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_tag.outputs.value }}
+          target_commitish: ${{ inputs.branch }}
+          name: ${{ inputs.release_name || steps.release_tag.outputs.value }}
+          generate_release_notes: true
+          files: |
+            release-artifacts/*
