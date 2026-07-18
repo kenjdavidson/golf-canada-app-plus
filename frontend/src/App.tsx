@@ -38,7 +38,10 @@ function App() {
               (no affiliation)
             </Typography>
             <Typography variant="body2" align="center">
-              <Link href="/docs/PRIVACY_POLICY.md" underline="hover">
+              <Link
+                href="https://kenjdavidson.com/golf-canada-app-plus/docs/PRIVACY_POLICY.md"
+                underline="hover"
+              >
                 Privacy Policy
               </Link>
             </Typography>
