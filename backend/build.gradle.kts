@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.kenjdavidson"
-version = "0.1"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
