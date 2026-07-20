@@ -7,16 +7,20 @@ This repository includes a dev container configuration (`.devcontainer/devcontai
 
 The container is based on the Java 21 devcontainer image and installs Node.js LTS automatically. It comes pre-configured with VS Code extensions for Java, Kotlin, Gradle, TypeScript, and React (Prettier + ESLint).
 
-### Required Codespaces secrets
+### Required secrets / environment variables
 
-Before creating a Codespace, add the following [GitHub Codespaces secrets](https://github.com/settings/codespaces) to your account (or to the repository, for all collaborators):
+The backend **will not start** without `JWT_SIGNING_SECRET` and `GOLF_CANADA_TOKEN_ENCRYPTION_KEY`. How you supply them depends on where you run the dev container:
 
-| Secret | Description |
-|---|---|
-| `JWT_SIGNING_SECRET` | HS256 signing secret for Micronaut JWT cookies. Use a long random string (≥ 32 characters). |
-| `GOLF_CANADA_TOKEN_ENCRYPTION_KEY` | Passphrase for AES-256-GCM encryption of Golf Canada tokens at rest. Use a long random string. |
+**GitHub Codespaces** — add them as [Codespaces secrets](https://github.com/settings/codespaces) in your GitHub account (or at the repository level). Codespaces automatically injects repository and user secrets as environment variables inside the container; no extra configuration is required.
 
-These correspond to the [required environment variables](#required-environment-variables) described below. Without them, the backend will fail to start.
+**Local dev container (Docker Desktop / VS Code Remote - Containers)** — the devcontainer configuration forwards these variables from your local machine's environment via the `remoteEnv` section. Export them in your shell before opening the container:
+
+```bash
+export JWT_SIGNING_SECRET="your-long-random-signing-secret"
+export GOLF_CANADA_TOKEN_ENCRYPTION_KEY="your-long-random-encryption-key"
+```
+
+These correspond to the [required environment variables](#required-environment-variables) described in the Backend Security section below.
 
 ### Running in the dev container
 
