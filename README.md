@@ -1,6 +1,42 @@
 # golf-canada-app-plus
 Golf Canada App mini-app provides enhanced game modes, data tracking and follower notifications
 
+## GitHub Codespaces / Dev Container
+
+This repository includes a dev container configuration (`.devcontainer/devcontainer.json`) so you can develop in GitHub Codespaces or any compatible dev container environment.
+
+The container is based on the Java 21 devcontainer image and installs Node.js LTS automatically. It comes pre-configured with VS Code extensions for Java, Kotlin, Gradle, TypeScript, and React (Prettier + ESLint).
+
+### Required secrets / environment variables
+
+The backend **will not start** without `JWT_SIGNING_SECRET` and `GOLF_CANADA_TOKEN_ENCRYPTION_KEY`. How you supply them depends on where you run the dev container:
+
+**GitHub Codespaces** — add them as [Codespaces secrets](https://github.com/settings/codespaces) in your GitHub account (or at the repository level). Codespaces automatically injects repository and user secrets as environment variables inside the container; no extra configuration is required.
+
+**Local dev container (Docker Desktop / VS Code Remote - Containers)** — the devcontainer configuration forwards these variables from your local machine's environment via the `remoteEnv` section. Export them in your shell before opening the container:
+
+```bash
+export JWT_SIGNING_SECRET="your-long-random-signing-secret"
+export GOLF_CANADA_TOKEN_ENCRYPTION_KEY="your-long-random-encryption-key"
+```
+
+These correspond to the [required environment variables](#required-environment-variables) described in the Backend Security section below.
+
+### Running in the dev container
+
+Once the container is ready:
+
+```bash
+# Install frontend dependencies (run automatically via postCreateCommand, but re-run if needed)
+npm --prefix frontend install
+
+# Start the frontend dev server (port 5173 is forwarded automatically)
+npm --prefix frontend run dev
+
+# Start the backend (port 8080 is forwarded automatically)
+./gradlew :backend:run
+```
+
 ## Backend SSL certificate
 
 The Micronaut backend ships with `backend/src/main/resources/ssl/golfcanada.pem` and loads it into the default JVM trust chain during application startup.
