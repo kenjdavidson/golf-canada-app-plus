@@ -1,6 +1,38 @@
 # golf-canada-app-plus
 Golf Canada App mini-app provides enhanced game modes, data tracking and follower notifications
 
+## GitHub Codespaces / Dev Container
+
+This repository includes a dev container configuration (`.devcontainer/devcontainer.json`) so you can develop in GitHub Codespaces or any compatible dev container environment.
+
+The container is based on the Java 21 devcontainer image and installs Node.js LTS automatically. It comes pre-configured with VS Code extensions for Java, Kotlin, Gradle, TypeScript, and React (Prettier + ESLint).
+
+### Required Codespaces secrets
+
+Before creating a Codespace, add the following [GitHub Codespaces secrets](https://github.com/settings/codespaces) to your account (or to the repository, for all collaborators):
+
+| Secret | Description |
+|---|---|
+| `JWT_SIGNING_SECRET` | HS256 signing secret for Micronaut JWT cookies. Use a long random string (≥ 32 characters). |
+| `GOLF_CANADA_TOKEN_ENCRYPTION_KEY` | Passphrase for AES-256-GCM encryption of Golf Canada tokens at rest. Use a long random string. |
+
+These correspond to the [required environment variables](#required-environment-variables) described below. Without them, the backend will fail to start.
+
+### Running in the dev container
+
+Once the container is ready:
+
+```bash
+# Install frontend dependencies (run automatically via postCreateCommand, but re-run if needed)
+npm --prefix frontend install
+
+# Start the frontend dev server (port 5173 is forwarded automatically)
+npm --prefix frontend run dev
+
+# Start the backend (port 8080 is forwarded automatically)
+./gradlew :backend:run
+```
+
 ## Backend SSL certificate
 
 The Micronaut backend ships with `backend/src/main/resources/ssl/golfcanada.pem` and loads it into the default JVM trust chain during application startup.

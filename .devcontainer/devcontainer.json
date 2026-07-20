@@ -1,0 +1,49 @@
+{
+  "name": "Golf Canada App+",
+  "image": "mcr.microsoft.com/devcontainers/java:21-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-gradle",
+        "fwcd.kotlin",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "editor.formatOnSave": true,
+        "[kotlin]": {
+          "editor.defaultFormatter": "fwcd.kotlin"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        }
+      }
+    }
+  },
+  "forwardPorts": [8080, 5173],
+  "portsAttributes": {
+    "8080": {
+      "label": "Backend (Micronaut)",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Frontend (Vite)",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "npm --prefix frontend install",
+  "remoteEnv": {
+    "JWT_SIGNING_SECRET": "${localEnv:JWT_SIGNING_SECRET}",
+    "GOLF_CANADA_TOKEN_ENCRYPTION_KEY": "${localEnv:GOLF_CANADA_TOKEN_ENCRYPTION_KEY}"
+  }
+}
