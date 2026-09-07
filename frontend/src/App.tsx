@@ -1,7 +1,7 @@
 import { Avatar, Box, Container, Link, Paper, Stack, Typography } from '@mui/material'
-import LoginForm from './features/auth/LoginForm.tsx'
+import LoginForm from './components/auth/LoginForm.tsx'
 import { useAppSelector } from './app/hooks.ts'
-import { selectIsAuthenticated, selectUsername } from './features/auth/selectors.ts'
+import { selectIsAuthenticated, selectUsername } from './store/auth/selectors.ts'
 
 function App() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
