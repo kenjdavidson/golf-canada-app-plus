@@ -1,6 +1,9 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+
+const codegenShim = fileURLToPath(new URL('./src/react-native-codegenNativeComponent.ts', import.meta.url))
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -31,6 +34,18 @@ export default defineConfig({
       }
     })
   ],
+  resolve: {
+    alias: [
+      {
+        find: 'react-native/Libraries/Utilities/codegenNativeComponent',
+        replacement: codegenShim,
+      },
+      {
+        find: 'react-native',
+        replacement: 'react-native-web',
+      },
+    ],
+  },
   build: {
     outDir: 'dist'
   }
