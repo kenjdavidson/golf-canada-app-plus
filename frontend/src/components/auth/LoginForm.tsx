@@ -9,8 +9,8 @@ import {
 } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from '../../app/hooks.ts'
-import { login } from './authSlice.ts'
-import { selectAuthError, selectAuthStatus } from './selectors.ts'
+import { login } from '../../store/auth/authSlice.ts'
+import { selectAuthError, selectAuthStatus } from '../../store/auth/selectors.ts'
 
 const LoginForm = () => {
   const dispatch = useAppDispatch()
