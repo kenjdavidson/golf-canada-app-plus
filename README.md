@@ -45,6 +45,8 @@ The Micronaut backend ships with `backend/src/main/resources/ssl/golfcanada.pem`
 
 The backend uses Micronaut Security with cookie-based JWT authentication backed by the Golf Canada authentication API.
 
+For a complete local reference of the implemented backend routes and generated Golf Canada API surface, see [`backend/README.md`](./backend/README.md).
+
 ### Required environment variables
 
 The application **will not start** without the following environment variables:
